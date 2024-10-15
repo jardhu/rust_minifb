@@ -14,6 +14,7 @@ use std::{
     ffi::{c_int, c_void, OsStr},
     num::NonZeroIsize,
     os::windows::ffi::OsStrExt,
+    ptr,
     time::Duration,
 };
 use winapi::{
@@ -521,7 +522,9 @@ impl HasWindowHandle for Window {
         };
 
         let raw_hinstance = unsafe { GetWindowLongPtrW(raw_hwnd, GWLP_HINSTANCE) };
-        let hinstance = NonZeroIsize::new(raw_hinstance);
+        let hinstance = NonZeroIsize::new(raw_hinstance).or(NonZeroIsize::new(unsafe {
+            libloaderapi::GetModuleHandleA(ptr::null()) as isize
+        }));
 
         let mut handle = Win32WindowHandle::new(hwnd);
         handle.hinstance = hinstance;
